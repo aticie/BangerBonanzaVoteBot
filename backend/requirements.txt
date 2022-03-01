@@ -1,2 +1,3 @@
 fastapi==0.74.1
 uvicorn[standard]==0.17.5
+aiosqlite==0.17.0
