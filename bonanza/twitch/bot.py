@@ -14,7 +14,7 @@ class TwitchBot(commands.Bot):
 
         self.requests_open = False
         self.current_song = None
-        self.db = VotesDB('votes.db')
+        self.db = VotesDB(os.getenv('DB_DIR', 'votes.db'))
 
     async def event_ready(self):
         logger.info(f'Successfully logged in as {self.nick}')

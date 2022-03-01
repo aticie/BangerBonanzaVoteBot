@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from fastapi import FastAPI
@@ -5,7 +6,7 @@ from fastapi import FastAPI
 from bonanza.database.votes import VotesDB
 
 app = FastAPI()
-db = VotesDB('votes.db')
+db = VotesDB(os.getenv('DB_DIR', 'votes.db'))
 
 
 @app.on_event("startup")
