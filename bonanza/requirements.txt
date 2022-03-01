@@ -1,1 +1,2 @@
 twitchio==2.1.5
+aiosqlite==0.17.0
