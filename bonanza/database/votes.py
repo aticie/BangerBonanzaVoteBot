@@ -3,7 +3,6 @@ import time
 import aiosqlite
 
 
-
 class VotesDB:
     def __init__(self, db_path=None):
         if db_path is None:
@@ -33,8 +32,8 @@ class VotesDB:
         """)
         await self.con.commit()
 
-    async def add_vote(self, user_id, song_id, vote):
-        user_voted = await self.get_user_vote(user_id, song_id)
+    async def add_vote(self, user_id, username, song_id, vote):
+        user_voted = await self.get_user_vote(username, song_id)
         if user_voted is not None:
             await self.con.execute("""
                 UPDATE votes SET vote = ?, timestamp = ? WHERE user_id = ? AND song_id = ?
@@ -43,7 +42,7 @@ class VotesDB:
             await self.con.execute("""
                 INSERT INTO votes (user_id, username, song_id, vote, timestamp)
                 VALUES (?, ?, ?, ?, ?)
-            """, (user_id, song_id, vote, int(time.time())))
+            """, (user_id, username, song_id, vote, int(time.time())))
         await self.con.commit()
 
     async def get_votes(self, song_id):
@@ -62,28 +61,33 @@ class VotesDB:
         cursor = await self.con.execute("""
             SELECT vote FROM votes WHERE username = ? AND song_id = ?
         """, (username, song_id))
-        return await cursor.fetchone()[0]
+        vote = await cursor.fetchone()
+        return vote
 
     async def get_song_vote_count(self, song_id):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes WHERE song_id = ?
         """, (song_id,))
-        return await cursor.fetchone()[0]
+        vote_count = await cursor.fetchone()
+        return vote_count[0]
 
     async def get_user_vote_count(self, username):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes WHERE username = ?
         """, (username,))
-        return await cursor.fetchone()[0]
+        vote_count = await cursor.fetchone()
+        return vote_count[0]
 
     async def get_user_vote_count_for_songs(self, username, song_ids):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes WHERE username = ? AND song_id IN ({})
         """.format(",".join(["?"] * len(song_ids))), (username,) + tuple(song_ids))
-        return await cursor.fetchone()[0]
+        vote_count = await cursor.fetchone()
+        return vote_count[0]
 
     async def get_total_vote_count(self):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes
         """)
-        return await cursor.fetchone()[0]
+        vote_count = await cursor.fetchone()
+        return vote_count[0]
