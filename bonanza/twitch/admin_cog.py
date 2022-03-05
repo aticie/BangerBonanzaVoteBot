@@ -15,7 +15,8 @@ class AdminCog(commands.Cog):
 
     @commands.command(name='startvote')
     async def hello(self, ctx: commands.Context, beatmap_id: int):
-        if self.bot.requests_open:
+        current_beatmap_id_tuple = await self.bot.db.get_current_beatmap_id()
+        if current_beatmap_id_tuple is not None:
             await ctx.send('A vote is already open.')
             return
 
@@ -26,7 +27,7 @@ class AdminCog(commands.Cog):
         current_beatmapset = current_beatmap['beatmapset']
         current_beatmap_text = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
         await ctx.send(f'Started voting for {current_beatmap_text}! Type 1-5 to rate this song!')
-        self.bot.requests_open = True
+        self.bot._open = True
 
     @commands.command(name='endvote')
     async def goodbye(self, ctx: commands.Context):

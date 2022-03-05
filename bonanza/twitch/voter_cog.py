@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from twitchio.ext import commands
 
@@ -13,8 +14,10 @@ class VoterCog(commands.Cog):
 
     @commands.command(name='currentvote', aliases=['cv'])
     async def current_vote(self, ctx: commands.Context):
-        if self.bot.requests_open:
-            current_song = f'{self.bot.current_beatmapset["artist"]} - {self.bot.current_beatmapset["title"]}'
+        current_beatmap_tuple = self.bot.db.get_current_beatmap()
+        if current_beatmap_tuple is not None:
+            current_beatmapset = json.loads(current_beatmap_tuple[0])['beatmapset']
+            current_song = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
             await ctx.send(f'Currently voting for: {current_song}')
         else:
             await ctx.send('No voting in process.')
