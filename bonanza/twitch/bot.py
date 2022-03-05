@@ -11,10 +11,6 @@ logger = logging.getLogger('banger.bonanza')
 class TwitchBot(commands.Bot):
     def __init__(self):
         super().__init__(token=os.getenv('TWITCH_ACCESS_TOKEN'), prefix='!')
-
-        self.requests_open = False
-        self.current_beatmap = None
-        self.current_beatmapset = None
         self.db = VotesDB(os.getenv('DB_DIR', 'votes.db'))
 
     async def event_ready(self):
@@ -30,9 +26,10 @@ class TwitchBot(commands.Bot):
             return
         await self.wait_for_ready()
         await self.handle_commands(message)
-        if self.requests_open:
+        beatmap_id_tup = await self.db.get_current_beatmap_id()
+        if beatmap_id_tup is not None:
             if len(message.content) == 1:
-                beatmap_id = self.current_beatmap['id']
+                beatmap_id = beatmap_id_tup[0]
                 await self.db.add_vote(user_id=message.author.id, beatmap_id=beatmap_id,
                                        vote=message.content, username=message.author.name)
                 logger.info(f'{message.author.name} voted for {beatmap_id} with {message.content}')

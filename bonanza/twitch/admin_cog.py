@@ -1,3 +1,4 @@
+import json
 import os
 
 from twitchio.ext import commands
@@ -19,24 +20,28 @@ class AdminCog(commands.Cog):
             return
 
         async with OsuApiV2(self.osu_client_id, self.osu_client_secret) as osu_api:
-            self.bot.current_beatmap = await osu_api.get_beatmap(beatmap_id)
-            self.bot.current_beatmapset = self.bot.current_beatmap['beatmapset']
+            current_beatmap = await osu_api.get_beatmap(beatmap_id)
+            await self.bot.db.set_current_beatmap(current_beatmap)
 
-        self.bot.db.set_current_beatmap(self.bot.current_beatmap)
-
-        current_beatmap_text = f'{self.bot.current_beatmapset["artist"]} - {self.bot.current_beatmapset["title"]}'
+        current_beatmapset = current_beatmap['beatmapset']
+        current_beatmap_text = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
         await ctx.send(f'Started voting for {current_beatmap_text}! Type 1-5 to rate this song!')
         self.bot.requests_open = True
 
     @commands.command(name='endvote')
     async def goodbye(self, ctx: commands.Context):
-        if not self.bot.requests_open:
+        current_beatmap_text_tuple = await self.bot.db.get_current_beatmap()
+        if current_beatmap_text_tuple is None:
             await ctx.send('No vote is currently open.')
             return
 
-        current_beatmap_text = f'{self.bot.current_beatmapset["artist"]} - {self.bot.current_beatmapset["title"]}'
+        current_beatmap_text = current_beatmap_text_tuple[0]
+        current_beatmap = json.loads(current_beatmap_text)
+        current_beatmapset = current_beatmap['beatmapset']
+        current_beatmap_text = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
+
+        await self.bot.db.remove_current_beatmap()
         await ctx.send(f'Ended voting for {current_beatmap_text}.')
-        self.bot.requests_open = False
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         """
