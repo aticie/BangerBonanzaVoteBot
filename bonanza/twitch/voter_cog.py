@@ -12,7 +12,7 @@ class VoterCog(commands.Cog):
         self.command_cooldown = 30
         self.command_used_time = datetime.datetime.now() - datetime.timedelta(hours=1000)
 
-    @commands.command(name='currentvote', aliases=['cv'])
+    @commands.command(name='currentvote', aliases=['cv', 'np'])
     async def current_vote(self, ctx: commands.Context):
         current_beatmap_tuple = await self.bot.db.get_current_beatmap()
         if current_beatmap_tuple is not None:
