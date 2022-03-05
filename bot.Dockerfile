@@ -1,10 +1,10 @@
 FROM python:3.9-slim
 
-WORKDIR /bonanza
+WORKDIR /app
 
 COPY bonanza/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY bonanza /bonanza
+COPY bonanza /app/bonanza
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "bonanza/main.py"]
