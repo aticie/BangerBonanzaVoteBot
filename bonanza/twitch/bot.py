@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 from twitchio.ext import commands
 
@@ -33,6 +33,6 @@ class TwitchBot(commands.Bot):
         if self.requests_open:
             if len(message.content) == 1:
                 beatmap_id = self.current_beatmap['id']
-                await self.db.add_vote(user_id=message.author.id, song_id=beatmap_id,
+                await self.db.add_vote(user_id=message.author.id, beatmap_id=beatmap_id,
                                        vote=message.content, username=message.author.name)
                 logger.info(f'{message.author.name} voted for {beatmap_id} with {message.content}')

@@ -1,3 +1,4 @@
+import json
 import time
 
 import aiosqlite
@@ -25,49 +26,88 @@ class VotesDB:
                 id INTEGER PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 username TEXT NOT NULL,
-                song_id INTEGER NOT NULL,
+                beatmap_id INTEGER NOT NULL,
                 vote INTEGER NOT NULL,
                 timestamp INTEGER NOT NULL
             )
         """)
+        await self.con.execute("""
+                    CREATE TABLE IF NOT EXISTS current_beatmap (
+                        beatmap_id INTEGER NOT NULL,
+                        beatmap_details TEXT NOT NULL
+                    )
+                """)
         await self.con.commit()
 
-    async def add_vote(self, user_id, username, song_id, vote):
-        user_voted = await self.get_user_vote(username, song_id)
+    async def get_current_beatmap(self):
+        cursor = await self.con.execute("""
+            SELECT beatmap_details FROM current_beatmap
+        """)
+        beatmap_details = await cursor.fetchone()
+        return beatmap_details
+
+    async def get_current_beatmap_id(self):
+        cursor = await self.con.execute("""
+            SELECT beatmap_id FROM current_beatmap
+        """)
+        beatmap_id = await cursor.fetchone()
+        return beatmap_id
+
+    async def remove_current_beatmap(self):
+        current_beatmap = await self.get_current_beatmap()
+        if current_beatmap is not None:
+            current_beatmap_id = current_beatmap[0][0]
+            await self.con.execute("""
+                DELETE FROM current_beatmap WHERE beatmap_id = ?
+            """, (current_beatmap_id,))
+            await self.con.commit()
+
+    async def set_current_beatmap(self, beatmap_details: dict):
+        await self.remove_current_beatmap()
+
+        beatmap_id = beatmap_details["id"]
+        beatmap_details_txt = json.dumps(beatmap_details)
+        await self.con.execute("""
+            INSERT INTO current_beatmap (beatmap_id, beatmap_details) VALUES (?, ?)
+        """, (beatmap_id, beatmap_details_txt))
+        await self.con.commit()
+
+    async def add_vote(self, user_id, username, beatmap_id, vote):
+        user_voted = await self.get_user_vote(username, beatmap_id)
         if user_voted is not None:
             await self.con.execute("""
-                UPDATE votes SET vote = ?, timestamp = ? WHERE user_id = ? AND song_id = ?
-            """, (vote, int(time.time()), user_id, song_id))
+                UPDATE votes SET vote = ?, timestamp = ? WHERE user_id = ? AND beatmap_id = ?
+            """, (vote, int(time.time()), user_id, beatmap_id))
         else:
             await self.con.execute("""
-                INSERT INTO votes (user_id, username, song_id, vote, timestamp)
+                INSERT INTO votes (user_id, username, beatmap_id, vote, timestamp)
                 VALUES (?, ?, ?, ?, ?)
-            """, (user_id, username, song_id, vote, int(time.time())))
+            """, (user_id, username, beatmap_id, vote, int(time.time())))
         await self.con.commit()
 
-    async def get_votes(self, song_id):
+    async def get_votes(self, beatmap_id):
         cursor = await self.con.execute("""
-            SELECT user_id, username, vote FROM votes WHERE song_id = ?
-        """, (song_id,))
+            SELECT user_id, username, vote FROM votes WHERE beatmap_id = ?
+        """, (beatmap_id,))
         return await cursor.fetchall()
 
     async def get_user_votes(self, username):
         cursor = await self.con.execute("""
-            SELECT song_id, vote FROM votes WHERE username = ?
+            SELECT beatmap_id, vote FROM votes WHERE username = ?
         """, (username,))
         return await cursor.fetchall()
 
-    async def get_user_vote(self, username, song_id):
+    async def get_user_vote(self, username, beatmap_id):
         cursor = await self.con.execute("""
-            SELECT vote FROM votes WHERE username = ? AND song_id = ?
-        """, (username, song_id))
+            SELECT vote FROM votes WHERE username = ? AND beatmap_id = ?
+        """, (username, beatmap_id))
         vote = await cursor.fetchone()
         return vote
 
-    async def get_song_vote_count(self, song_id):
+    async def get_beatmap_vote_count(self, beatmap_id):
         cursor = await self.con.execute("""
-            SELECT COUNT(*) FROM votes WHERE song_id = ?
-        """, (song_id,))
+            SELECT COUNT(*) FROM votes WHERE beatmap_id = ?
+        """, (beatmap_id,))
         vote_count = await cursor.fetchone()
         return vote_count[0]
 
@@ -78,10 +118,10 @@ class VotesDB:
         vote_count = await cursor.fetchone()
         return vote_count[0]
 
-    async def get_user_vote_count_for_songs(self, username, song_ids):
+    async def get_user_vote_count_for_beatmaps(self, username, beatmap_ids):
         cursor = await self.con.execute("""
-            SELECT COUNT(*) FROM votes WHERE username = ? AND song_id IN ({})
-        """.format(",".join(["?"] * len(song_ids))), (username,) + tuple(song_ids))
+            SELECT COUNT(*) FROM votes WHERE username = ? AND beatmap_id IN ({})
+        """.format(",".join(["?"] * len(beatmap_ids))), (username,) + tuple(beatmap_ids))
         vote_count = await cursor.fetchone()
         return vote_count[0]
 
