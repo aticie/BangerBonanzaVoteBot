@@ -99,7 +99,11 @@ async def get_current_beatmap():
     Returned object is the same as https://osu.ppy.sh/docs/index.html#beatmap
     :return: Dictionary
     """
-    return json.loads(await db.get_current_beatmap())
+    current_beatmap_dict = await db.get_current_beatmap()
+    if current_beatmap_dict is None:
+        return None
+    else:
+        return json.loads(current_beatmap_dict['beatmap_details'])
 
 
 @app.get("/current_beatmap/id")

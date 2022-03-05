@@ -41,7 +41,7 @@ class VotesDB:
 
     async def get_current_beatmap(self):
         cursor = await self.con.execute("""
-            SELECT beatmap_details FROM current_beatmap
+            SELECT beatmap_id, beatmap_details FROM current_beatmap
         """)
         beatmap_details = await cursor.fetchone()
         return beatmap_details
@@ -56,7 +56,7 @@ class VotesDB:
     async def remove_current_beatmap(self):
         current_beatmap = await self.get_current_beatmap()
         if current_beatmap is not None:
-            current_beatmap_id = current_beatmap[0][0]
+            current_beatmap_id = current_beatmap['beatmap_id']
             await self.con.execute("""
                 DELETE FROM current_beatmap WHERE beatmap_id = ?
             """, (current_beatmap_id,))

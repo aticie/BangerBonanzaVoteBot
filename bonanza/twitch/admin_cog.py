@@ -27,16 +27,15 @@ class AdminCog(commands.Cog):
         current_beatmapset = current_beatmap['beatmapset']
         current_beatmap_text = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
         await ctx.send(f'Started voting for {current_beatmap_text}! Type 1-5 to rate this song!')
-        self.bot._open = True
 
     @commands.command(name='endvote')
     async def goodbye(self, ctx: commands.Context):
-        current_beatmap_text_tuple = await self.bot.db.get_current_beatmap()
-        if current_beatmap_text_tuple is None:
+        current_beatmap_object = await self.bot.db.get_current_beatmap()
+        if current_beatmap_object is None:
             await ctx.send('No vote is currently open.')
             return
 
-        current_beatmap_text = current_beatmap_text_tuple[0]
+        current_beatmap_text = current_beatmap_object['beatmap_details']
         current_beatmap = json.loads(current_beatmap_text)
         current_beatmapset = current_beatmap['beatmapset']
         current_beatmap_text = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'

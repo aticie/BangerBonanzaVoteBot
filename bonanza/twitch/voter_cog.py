@@ -14,9 +14,9 @@ class VoterCog(commands.Cog):
 
     @commands.command(name='currentvote', aliases=['cv'])
     async def current_vote(self, ctx: commands.Context):
-        current_beatmap_tuple = self.bot.db.get_current_beatmap()
+        current_beatmap_tuple = await self.bot.db.get_current_beatmap()
         if current_beatmap_tuple is not None:
-            current_beatmapset = json.loads(current_beatmap_tuple[0])['beatmapset']
+            current_beatmapset = json.loads(current_beatmap_tuple['beatmap_details'])['beatmapset']
             current_song = f'{current_beatmapset["artist"]} - {current_beatmapset["title"]}'
             await ctx.send(f'Currently voting for: {current_song}')
         else:

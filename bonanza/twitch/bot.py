@@ -29,7 +29,7 @@ class TwitchBot(commands.Bot):
         beatmap_id_tup = await self.db.get_current_beatmap_id()
         if beatmap_id_tup is not None:
             if len(message.content) == 1:
-                beatmap_id = beatmap_id_tup[0]
+                beatmap_id = beatmap_id_tup['beatmap_id']
                 await self.db.add_vote(user_id=message.author.id, beatmap_id=beatmap_id,
                                        vote=message.content, username=message.author.name)
                 logger.info(f'{message.author.name} voted for {beatmap_id} with {message.content}')
