@@ -1,8 +1,8 @@
 import json
 import os
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 
 from bonanza.database.votes import VotesDB
 
@@ -20,7 +20,19 @@ async def root():
     return {"me": "Banger Bonanza Voting API"}
 
 
-@app.get("/votes/{beatmap_id}")
+@app.get("/votes")
+async def get_user_vote(beatmap_id: int, username: str):
+    """
+    Returns the vote for a single user on a beatmap.
+    :param beatmap_id: Beatmap id
+    :param username: Voter username
+    :return: Dictionary
+    """
+    return await db.get_user_vote(username=username,
+                                  beatmap_id=beatmap_id)
+
+
+@app.get("/votes/b/{beatmap_id}")
 async def get_votes(beatmap_id: int):
     """
     Returns the votes for a single beatmap.
@@ -30,19 +42,8 @@ async def get_votes(beatmap_id: int):
     return await db.get_votes(beatmap_id)
 
 
-@app.get("/votes/{beatmap_id}/{username}")
-async def get_user_vote(beatmap_id: int, username: int):
-    """
-    Returns the vote for a single user on a beatmap.
-    :param beatmap_id: Beatmap id
-    :param username: Voter username
-    :return: Dictionary
-    """
-    return await db.get_user_vote(beatmap_id, username)
-
-
-@app.get("/votes/{username}")
-async def get_user_votes(username: int):
+@app.get("/votes/u/{username}")
+async def get_user_votes(username: str):
     """
     Returns the votes for a single user.
     :param username: Voter username
@@ -51,7 +52,7 @@ async def get_user_votes(username: int):
     return await db.get_user_votes(username)
 
 
-@app.get("/vote_count/{beatmap_id}")
+@app.get("/vote_count/b/{beatmap_id}")
 async def get_song_vote_count(beatmap_id: int):
     """
     Returns the vote count for a single beatmap.
@@ -61,34 +62,30 @@ async def get_song_vote_count(beatmap_id: int):
     return await db.get_beatmap_vote_count(beatmap_id)
 
 
-@app.get("/vote_count/{username}")
-async def get_user_vote_count(username: int):
+@app.get("/vote_count/u/{username}")
+async def get_user_vote_count(username: str, beatmap_ids: Optional[List[int]] = Query(None)):
     """
     Returns the vote count for a single user.
     :param username: Voter username
+    :param beatmap_ids: List of beatmap ids
     :return: Integer
     """
-    return await db.get_user_vote_count(username)
+    if beatmap_ids is None:
+        return await db.get_user_vote_count(username)
+    else:
+        return await db.get_user_vote_count_for_beatmaps(username, beatmap_ids)
 
 
 @app.get("/vote_count")
-async def get_total_vote_count():
+async def get_total_vote_count(beatmap_ids: Optional[List[int]] = Query(None)):
     """
     Returns the total vote count.
     :return: Integer
     """
-    return await db.get_total_vote_count()
-
-
-@app.get("/vote_count/{username}")
-async def get_user_vote_count_for_songs(username: int, beatmap_ids: List[int]):
-    """
-    Returns the vote count for a list of beatmaps of a single user.
-    :param username: Voter username
-    :param beatmap_ids: Beatmap ids
-    :return: Integer
-    """
-    return await db.get_user_vote_count_for_beatmaps(username, beatmap_ids)
+    if beatmap_ids is None:
+        return await db.get_total_vote_count()
+    else:
+        return await db.get_total_vote_count_for_beatmaps(beatmap_ids)
 
 
 @app.get("/current_beatmap")

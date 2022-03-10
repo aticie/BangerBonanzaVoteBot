@@ -109,25 +109,32 @@ class VotesDB:
             SELECT COUNT(*) FROM votes WHERE beatmap_id = ?
         """, (beatmap_id,))
         vote_count = await cursor.fetchone()
-        return vote_count[0]
+        return vote_count['COUNT(*)']
 
     async def get_user_vote_count(self, username):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes WHERE username = ?
         """, (username,))
         vote_count = await cursor.fetchone()
-        return vote_count[0]
+        return vote_count['COUNT(*)']
 
     async def get_user_vote_count_for_beatmaps(self, username, beatmap_ids):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes WHERE username = ? AND beatmap_id IN ({})
         """.format(",".join(["?"] * len(beatmap_ids))), (username,) + tuple(beatmap_ids))
         vote_count = await cursor.fetchone()
-        return vote_count[0]
+        return vote_count['COUNT(*)']
+
+    async def get_total_vote_count_for_beatmaps(self, beatmap_ids):
+        cursor = await self.con.execute("""
+            SELECT COUNT(*) FROM votes WHERE beatmap_id IN ({})
+        """.format(",".join(["?"] * len(beatmap_ids))), tuple(beatmap_ids))
+        vote_count = await cursor.fetchone()
+        return vote_count['COUNT(*)']
 
     async def get_total_vote_count(self):
         cursor = await self.con.execute("""
             SELECT COUNT(*) FROM votes
         """)
         vote_count = await cursor.fetchone()
-        return vote_count[0]
+        return vote_count['COUNT(*)']
