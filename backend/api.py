@@ -3,10 +3,22 @@ import os
 from typing import List, Optional
 
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from bonanza.database.votes import VotesDB
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 db = VotesDB(os.getenv('DB_DIR', 'votes.db'))
 
 
