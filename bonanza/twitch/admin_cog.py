@@ -15,11 +15,6 @@ class AdminCog(commands.Cog):
 
     @commands.command(name='startvote')
     async def hello(self, ctx: commands.Context, beatmap_id: int):
-        current_beatmap_id_tuple = await self.bot.db.get_current_beatmap_id()
-        if current_beatmap_id_tuple is not None:
-            await ctx.send('A vote is already open.')
-            return
-
         async with OsuApiV2(self.osu_client_id, self.osu_client_secret) as osu_api:
             current_beatmap = await osu_api.get_beatmap(beatmap_id)
             await self.bot.db.set_current_beatmap(current_beatmap)
