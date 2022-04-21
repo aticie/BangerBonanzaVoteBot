@@ -44,7 +44,7 @@ class AdminCog(commands.Cog):
         twitch.tv/heyronii = '68427964'
         twitch.tv/hallowatcher = '17289248'
         """
-        return ctx.author.id == '413734571' or ctx.author.id == '68427964' or ctx.author.id == '17289248'
+        return ctx.author.is_mod
 
 
 def prepare(bot: commands.Bot):
