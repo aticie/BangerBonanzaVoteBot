@@ -6,6 +6,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from bonanza.database.votes import VotesDB
+from bonanza.osu_api import OsuApiV2
 
 app = FastAPI()
 
@@ -20,6 +21,9 @@ app.add_middleware(
 )
 
 db = VotesDB(os.getenv('DB_DIR', 'votes.db'))
+secret_key = os.getenv('SECRET_KEY')
+osu_client_id = os.getenv("OSU_CLIENT_ID")
+osu_client_secret = os.getenv("OSU_CLIENT_SECRET")
 
 
 @app.on_event("startup")
@@ -123,3 +127,17 @@ async def get_current_beatmap_id():
     :return: String
     """
     return await db.get_current_beatmap_id()
+
+
+@app.post("/current_beatmap")
+async def change_current_beatmap(beatmap_id: int, auth: str):
+    """
+    Changes the current beatmap to the specified one.
+    """
+
+    if auth != secret_key:
+        return {'error': 'You shouldn\'t do that.'}
+
+    async with OsuApiV2(osu_client_id, osu_client_secret) as osu_api:
+        current_beatmap = await osu_api.get_beatmap(beatmap_id)
+        await db.set_current_beatmap(current_beatmap)
